@@ -2,6 +2,7 @@
 
 namespace App;
 
+use Laravel\Passport\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
@@ -35,7 +36,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
  */
 class User extends Authenticatable
 {
-    use Notifiable;
+    use HasApiTokens, Notifiable;
 
     protected $casts = [
         'user_role_id' => 'int'
@@ -69,5 +70,10 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(\App\Models\Story::class)
             ->withPivot('is_readed');
+    }
+
+    public function oauth_access_token()
+    {
+        return $this->hasMany(\App\Models\OauthAccessToken::class);
     }
 }
