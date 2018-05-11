@@ -39,7 +39,7 @@ class AuthController extends ApiController
 
     public function logout(Request $request)
     {
-        $request->user()->oauth_acess_token()->delete();
+        $request->user()->oauth_access_token()->delete();
         return $this->respondSuccess('Logout successfully');
     }
 
