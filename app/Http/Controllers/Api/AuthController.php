@@ -15,13 +15,13 @@ class AuthController extends ApiController
             return $errors;
         }
 
-        if(!UserRepository::getUserByDeviceId($request->device_id)){
-            UserRole::findOrFail(UserRole::DEVICE)->users()->create([
+        if(!$user = UserRepository::getUserByDeviceId($request->device_id)){
+            $user = UserRole::findOrFail(UserRole::DEVICE)->users()->create([
                 'device_id' => $request->device_id,
             ]);
         }
 
-        return self::getAccessToken($request, 'device');
+        return self::getAccessToken($request, 'device', $user->only('subscription_expired_at'));
     }
 
     protected function validationDeviceSignIn($request)
@@ -43,7 +43,7 @@ class AuthController extends ApiController
         return $this->respondSuccess('Logout successfully');
     }
 
-    protected function getAccessToken($request, $grantType = 'password')
+    protected function getAccessToken($request, $grantType = 'password', $addToResponse = [])
     {
         $client = Client::where('password_client', 1)->first();
 
@@ -58,6 +58,13 @@ class AuthController extends ApiController
             'POST'
         );
 
-        return \Route::dispatch($tokenRequest);
+        $response = \Route::dispatch($tokenRequest);
+        $json = json_decode($response->getContent(), true);
+        if(!empty($json['access_token'])){
+            $json = array_merge($json, (array)$addToResponse);
+        }
+        $response->setContent(json_encode($json));
+
+        return $response;
     }
 }
